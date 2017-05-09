@@ -10,19 +10,19 @@ let agency = Agency(tag: "sf-muni", title: "San Francisco Municipal Railway", re
 Get an `Agency`'s routes:
 ```swift
 do {
-	let nJudah = try agency.routes().filter({ $0.tag == "N" })
+    let nJudah = try agency.routes().filter({ $0.tag == "N" })
 } catch {
-	fatalError()
+    fatalError()
 }
 ```
 
 Get `Prediction`s for a `Stop`:
 ```swift
 do {
-	let powellOutbound = Stop(agency: agency, stopTag: "6995", title: "Powell Station Outbound", location: (37.7843, -122.4078199), stopId: "16995")
-	let (predictions, _) = try powellOutbound.predictions()
+    let powellOutbound = Stop(agency: agency, stopTag: "6995", title: "Powell Station Outbound", location: (37.7843, -122.4078199), stopId: "16995")
+    let (predictions, _) = try powellOutbound.predictions()
 } catch {
-	fatalError()
+    fatalError()
 }
 ```
 
