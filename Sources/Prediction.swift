@@ -12,35 +12,35 @@ import Foundation
 public struct Prediction {
 
     /// The route associated with the prediction
-    weak var route: Route?
+    public weak var route: Route?
     
     /// The predicted time
-    let predictedTime: Date
+    public let predictedTime: Date
     
     /// specifies whether the time given refers to when the vehicle will *depart*
-    let departure: Bool
+    public let departure: Bool
     
     /// The direction for the prediction
-    let direction: Direction
+    public let direction: Direction
     
     /// The block number associated with the prediction. Given as a string.
-    let block: String?
+    public let block: String?
     
     /// The trip tag. An identifier for a particular trip within a block assignment.
-    let tripTag: String?
+    public let tripTag: String?
     
     /// Whether or not the prediction involves a layover (where the vehicle has not left its
     /// departing terminal yet). If true, the prediction will be less accurate.
-    let affectedByLayover: Bool
+    public let affectedByLayover: Bool
     
     /// Whether or not the prediction is purely based on the route schedule and doesn't take GPS
     /// data into account. Only used for certain agencies. If true, the prediction will be less
     /// accurate.
-    let scheduleBased: Bool
+    public let scheduleBased: Bool
     
     /// Whether or not the vehicle is delayed because of traffic. Only used for certain agencies.
-    let delayed: Bool
+    public let delayed: Bool
     
     /// How many vehicles are part of the prediction, if the route's vehicle is capable of running
-    let numberOfVehicles: UInt
+    public let numberOfVehicles: UInt
 }

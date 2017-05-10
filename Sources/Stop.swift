@@ -12,20 +12,20 @@ import Kanna
 public final class Stop {
     
     /// A unique alphanumeric identifier for the stop
-    let tag: String
+    public let tag: String
     
     /// The stop's title
-    let title: String
+    public let title: String
     
     /// A short title for the stop, if available
-    let shortTitle: String?
+    public let shortTitle: String?
     
     /// The stop's location
-    let location: (Double, Double)
+    public let location: (Double, Double)
     
     /// A numeric identifier for the stop. *Not unique* as some agencies share stop ids across
     /// multiple inbound/outbound stops
-    let stopId: String?
+    public let stopId: String?
     
     /// Returns predictions for the stop
     ///
@@ -34,7 +34,7 @@ public final class Stop {
     /// - Returns: A tuple consisting of an array of predictions and any messages associated with
     /// the stop
     /// - Throws: Download or parse errors if the API call fails
-    func predictions(routes: [Route] = []) throws -> ([Prediction], [Alert]) {
+    public func predictions(routes: [Route] = []) throws -> ([Prediction], [Alert]) {
         
         // handle case where we don't have a stopId
         var predictionsURLString: String!

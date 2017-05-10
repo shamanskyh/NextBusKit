@@ -44,7 +44,7 @@ public enum AlertPriority: String {
     ///
     /// - Parameter priority: The string from the API
     /// - Returns: An `AlertPriority` enum value
-    static func priorityFromString(priority: String?) -> AlertPriority {
+    public static func priorityFromString(priority: String?) -> AlertPriority {
         guard let priority = priority else {
             return .normal
         }
