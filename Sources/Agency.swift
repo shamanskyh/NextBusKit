@@ -77,7 +77,7 @@ public class Agency {
     ///   - title: The agency's formal title
     ///   - shortTitle: The agency's short title
     ///   - regionTitle: The region title
-    init(tag: String, title: String, shortTitle: String? = nil, regionTitle: String) {
+    public init(tag: String, title: String, shortTitle: String? = nil, regionTitle: String) {
         self.tag = tag
         self.title = title
         self.shortTitle = shortTitle

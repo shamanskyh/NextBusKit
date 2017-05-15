@@ -39,7 +39,7 @@ public final class Stop {
         // handle case where we don't have a stopId
         var predictionsURLString: String!
         if let stopId = stopId, routes.isEmpty {
-            if routes.isEmpty {
+            if !routes.isEmpty {
                 predictionsURLString = Constants.nextBusAPIRoot + Constants.predictionsCommand + Constants.agencyParameter + agencyTag + Constants.stopIdParameter + stopId + Constants.routeParameter + routes.map({ $0.tag }).joined(separator: Constants.routeParameter)
             } else {
                 predictionsURLString = Constants.nextBusAPIRoot + Constants.predictionsCommand + Constants.agencyParameter + agencyTag + Constants.stopIdParameter + stopId
