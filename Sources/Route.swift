@@ -48,7 +48,7 @@ public final class Route {
         let routeConfigURLString = Constants.nextBusAPIRoot + Constants.routeConfigCommand + Constants.agencyParameter + agencyTag + Constants.routeParameter + tag + (showInactiveDirections ? Constants.verboseRouteParameter : "")
         
         guard let url = URL(string: routeConfigURLString),
-            let document = XML(url: url, encoding: .utf8),
+            let document = try? XML(url: url, encoding: .utf8),
             let route = document.css("body > route").first else {
                 throw Error.downloadError
         }

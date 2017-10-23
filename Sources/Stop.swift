@@ -51,7 +51,7 @@ public final class Stop {
         }
         
         guard let url = URL(string: predictionsURLString),
-            let document = XML(url: url, encoding: .utf8) else {
+            let document = try? XML(url: url, encoding: .utf8) else {
                 throw Error.downloadError
         }
 

@@ -43,7 +43,7 @@ public class Agency {
         
         // get the route list using the tag
         let routeListURLString = Constants.nextBusAPIRoot + Constants.routeListCommand + Constants.agencyParameter + self.tag
-        if let routeURL = URL(string: routeListURLString), let routes = XML(url: routeURL, encoding: .utf8)?.css("body > route") {
+        if let routeURL = URL(string: routeListURLString), let routes = try? XML(url: routeURL, encoding: .utf8).css("body > route") {
             var returnRoutes = [Route]()
             for route in routes {
                 if let routeTag = route["tag"], let routeTitle = route["title"] {
