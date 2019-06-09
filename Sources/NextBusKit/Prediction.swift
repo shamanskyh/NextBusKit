@@ -8,11 +8,33 @@
 
 import Foundation
 
-/// An estimate for when a vehicle will arrive for a given stop.
-public struct Prediction {
+/// A way to indicate a lack of a prediction
+public enum PredictionOrNoPrediction {
+    /// A prediction
+    case prediction(Prediction)
+    /// No prediction
+    case noPrediction(NoPrediction)
+}
 
+/// A way to indicate that a route is present, but has no prediction
+public struct NoPrediction: Codable {
+    /// The route
+    public weak var route: Route?
+    
+    public var strongRoute: Route?
+    
+    /// The title of the direction. Note: This is not a direction object, because not enough
+    /// information is known
+    public let directionTitle: String
+}
+
+/// An estimate for when a vehicle will arrive for a given stop.
+public struct Prediction: Codable {
+    
     /// The route associated with the prediction
     public weak var route: Route?
+    
+    public var strongRoute: Route?
     
     /// The predicted time
     public let predictedTime: Date
@@ -44,3 +66,4 @@ public struct Prediction {
     /// How many vehicles are part of the prediction, if the route's vehicle is capable of running
     public let numberOfVehicles: UInt
 }
+

@@ -10,7 +10,7 @@ import Foundation
 import Kanna
 
 /// A public transit agency
-public class Agency {
+public class Agency: Codable {
     
     // MARK: - Public Properties
     
@@ -34,12 +34,13 @@ public class Agency {
     /// An array of the agency's routes. First call downloads and parses routes from the server;
     /// successive calls use a cached version.
     public func routes() throws -> [Route] {
-        struct Cached { static var routes = [Route]() }
+        //struct Cached { static var routes = [Route]() }
 
         /// short circuit if cached routes are okay
-        if !Cached.routes.isEmpty && !needsRefresh {
-            return Cached.routes
-        }
+        // TODO: Fix route caching
+//        if !Cached.routes.isEmpty && !needsRefresh {
+//            return Cached.routes
+//        }
         
         // get the route list using the tag
         let routeListURLString = Constants.nextBusAPIRoot + Constants.routeListCommand + Constants.agencyParameter + self.tag
@@ -55,8 +56,8 @@ public class Agency {
                     throw Error.parseError
                 }
             }
-            Cached.routes = returnRoutes
-            returnRoutes.forEach{ routeCache[$0.tag] = $0 }
+            //Cached.routes = returnRoutes
+            //returnRoutes.forEach{ routeCache[$0.tag] = $0 }
             return returnRoutes
         } else {
             throw Error.downloadError
@@ -64,9 +65,9 @@ public class Agency {
     }
     
     // MARK: - Private Variables
-    internal var routeCache = [String: Route]()
-    internal var stopCache = [String: Stop]()
-    internal var directionCache = [String: Direction]()
+    //internal var routeCache = [String: Route]()
+    //internal var stopCache = [String: Stop]()
+    //internal var directionCache = [String: Direction]()
     
     // MARK: - Initializers
     

@@ -9,7 +9,7 @@
 import Foundation
 import Kanna
 
-public final class Stop {
+public final class Stop: Codable, CustomDebugStringConvertible {
     
     /// A unique alphanumeric identifier for the stop
     public let tag: String
@@ -21,7 +21,7 @@ public final class Stop {
     public let shortTitle: String?
     
     /// The stop's location
-    public let location: (Double, Double)
+    public let location: Location
     
     /// A numeric identifier for the stop. *Not unique* as some agencies share stop ids across
     /// multiple inbound/outbound stops
@@ -31,10 +31,21 @@ public final class Stop {
     ///
     /// - Parameter routes: If specified, will limit the route predictions before making the API
     /// call. If the stop was initialized without a `stopId`, this field must be specified
-    /// - Returns: A tuple consisting of an array of predictions and any messages associated with
-    /// the stop
+    /// - Parameter mockedData: If true, the function will returned mocked data without making a
+    /// network call
+    /// - Parameter printNetworkCalls: If true, the function will print all network calls that it
+    /// makes to the console
+    /// - Returns: A tuple consisting of an array of predictions (or missing predictions) and any
+    /// messages associated with the stop
     /// - Throws: Download or parse errors if the API call fails
-    public func predictions(routes: [Route] = []) throws -> ([Prediction], [Alert]) {
+    public func predictions(routes: [Route] = [],
+                            mockedData: Bool = false,
+                            printNetworkCalls: Bool = false) throws -> ([PredictionOrNoPrediction], [Alert]) {
+
+        if mockedData {
+            let mock = MockedPredictions()
+            return (mock.predictions, mock.alerts)
+        }
         
         // handle case where we don't have a stopId
         var predictionsURLString: String!
@@ -54,12 +65,32 @@ public final class Stop {
             let document = try? XML(url: url, encoding: .utf8) else {
                 throw Error.downloadError
         }
-
-        var finalPredictions = [Prediction]()
+        
+        if printNetworkCalls {
+            print("NEXTBUS API CALLING: \(url)")
+        }
+        
+        var finalPredictions = [PredictionOrNoPrediction]()
         var finalAlerts = Set<Alert>()
         for outerPredictions in document.css("body > predictions") {
             guard let routeTag = outerPredictions["routeTag"], let routeTitle = outerPredictions["routeTitle"] else {
                 throw Error.parseError
+            }
+            
+            // no predictions
+            if let dirTitleBecuaseNoPredictions = outerPredictions["dirTitleBecauseNoPredictions"] {
+                
+                // FIXME: If we don't have a route here, we create one but then it's assigned to
+                // a weak var and we lose it
+                var useStrongRoute = false
+                let route = Route(agencyTag: agencyTag, routeTag: routeTag, routeTitle: routeTitle)
+                useStrongRoute = true
+//                if agency?.routeCache[routeTag] == nil {
+//                    useStrongRoute = true
+//                }
+                
+                let noPrediction = NoPrediction(route: route, strongRoute: useStrongRoute ? route : nil, directionTitle: dirTitleBecuaseNoPredictions)
+                finalPredictions.append(PredictionOrNoPrediction.noPrediction(noPrediction))
             }
             
             for direction in outerPredictions.css("direction") {
@@ -71,18 +102,27 @@ public final class Stop {
                     guard let epochTime = directionPrediction["epochTime"],
                         let epochTimeMilliseconds = Double(epochTime),
                         let directionTag = directionPrediction["dirTag"] else {
-                        throw Error.parseError
+                            throw Error.parseError
                     }
                     
-                    let route = agency?.routeCache[routeTag] ?? Route(agencyTag: agencyTag, routeTag: routeTag, routeTitle: routeTitle)
+                    // FIXME: If we don't have a route here, we create one but then it's assigned to
+                    // a weak var and we lose it
+                    var useStrongRoute = false
+                    let route = Route(agencyTag: agencyTag, routeTag: routeTag, routeTitle: routeTitle)
+//                    if agency?.routeCache[routeTag] == nil {
+//                        useStrongRoute = true
+//                    }
+                    useStrongRoute = true
+                    
                     let predictedTime = Date(timeIntervalSince1970: epochTimeMilliseconds / 1000.0)
-                    let direction = agency?.directionCache[directionTag] ?? Direction(name: nil, tag: directionTag, title: directionTitle, active: true, orderedStops: [])
+                    let direction = Direction(name: nil, tag: directionTag, title: directionTitle, active: true, orderedStops: [])
                     var numberOfVehicles: UInt = 1
                     if let numberOfVehiclesString = directionPrediction["vehiclesInConsist"],
                         let vehicleCount = UInt(numberOfVehiclesString) {
                         numberOfVehicles = vehicleCount
                     }
                     let prediction = Prediction(route: route,
+                                                strongRoute: useStrongRoute ? route : nil,
                                                 predictedTime: predictedTime,
                                                 departure: directionPrediction["isDeparture"] == "true",
                                                 direction: direction,
@@ -92,7 +132,7 @@ public final class Stop {
                                                 scheduleBased: directionPrediction["isScheduleBased"] == "true",
                                                 delayed: directionPrediction["delayed"] == "true",
                                                 numberOfVehicles: numberOfVehicles)
-                    finalPredictions.append(prediction)
+                    finalPredictions.append(PredictionOrNoPrediction.prediction(prediction))
                 }
             }
             
@@ -124,7 +164,7 @@ public final class Stop {
                 stopTag: String,
                 title: String,
                 shortTitle: String? = nil,
-                location: (Double, Double),
+                location: Location,
                 stopId: String? = nil) {
         self.agencyTag = agencyTag
         self.tag = stopTag
@@ -148,7 +188,7 @@ public final class Stop {
                             stopTag: String,
                             title: String,
                             shortTitle: String? = nil,
-                            location: (Double, Double),
+                            location: Location,
                             stopId: String? = nil) {
         self.init(agencyTag: agency.tag,
                   stopTag: stopTag,
@@ -158,4 +198,37 @@ public final class Stop {
                   stopId: stopId)
         self.agency = agency
     }
+    
+    public var debugDescription: String {
+        return self.title
+    }
 }
+
+extension Stop: Equatable {
+    public static func ==(lhs: Stop, rhs: Stop) -> Bool {
+        return lhs.agencyTag == rhs.agencyTag && lhs.tag == rhs.tag
+    }
+}
+
+extension Stop: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(agencyTag)
+        hasher.combine(tag)
+    }
+}
+
+/// A struct representing a geographic point
+public struct Location: Codable {
+
+    /// the point's latitude, in degrees
+    public let latitude: Double
+    
+    /// the point's longitude, in degrees
+    public let longitude: Double
+    
+    public init(latitude: Double, longitude: Double) {
+        self.latitude = latitude
+        self.longitude = longitude
+    }
+}
+

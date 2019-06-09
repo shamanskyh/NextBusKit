@@ -7,13 +7,18 @@
 //
 
 /// A service alert. This is typically displayed alongside predictions for a stop.
-public struct Alert {
+public struct Alert: Codable {
     
     /// The text of the alert
     public let text: String
     
     /// The priority for alerts. Only used by certain agencies.
     public let priority: AlertPriority
+    
+    public init(text: String, priority: AlertPriority) {
+        self.text = text
+        self.priority = priority
+    }
 }
 
 extension Alert: Equatable {
@@ -23,13 +28,14 @@ extension Alert: Equatable {
 }
 
 extension Alert: Hashable {
-    public var hashValue: Int {
-        return text.hashValue ^ priority.hashValue
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(text)
+        hasher.combine(priority)
     }
 }
 
 /// An alert's priority. Low, normal, or high.
-public enum AlertPriority: String {
+public enum AlertPriority: String, Codable {
     
     /// low priority
     case low
@@ -57,5 +63,16 @@ public enum AlertPriority: String {
         default:
             return .normal
         }
+    }
+}
+
+extension AlertPriority: Comparable {
+    public static func < (lhs: AlertPriority, rhs: AlertPriority) -> Bool {
+        if lhs == .low && (rhs == .normal || rhs == .high) {
+            return true
+        } else if lhs == .normal && rhs == .high {
+            return true
+        }
+        return false
     }
 }

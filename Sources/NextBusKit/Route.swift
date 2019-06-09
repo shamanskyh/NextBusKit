@@ -8,10 +8,11 @@
 
 import Foundation
 import Kanna
+import UIKit
 
 /// A public transportation route. Routes can go in multiple directions (inbound, outbound, etc.)
 /// and have a set of stops associated with them.
-public final class Route {
+public final class Route: Codable {
     
     // MARK: - Public Properties
     
@@ -40,9 +41,10 @@ public final class Route {
     public func details(showInactiveDirections: Bool = false) throws -> RouteDetails {
         struct Cached { static var details: RouteDetails? = nil }
         
-        if let cachedDetails = Cached.details, !needsRefresh {
-            return cachedDetails
-        }
+        // FIXME: This caching isn't per-route, so it doesn't work. Fix it.
+//        if let cachedDetails = Cached.details, !needsRefresh {
+//            return cachedDetails
+//        }
         
         // get the route config using the tag
         let routeConfigURLString = Constants.nextBusAPIRoot + Constants.routeConfigCommand + Constants.agencyParameter + agencyTag + Constants.routeParameter + tag + (showInactiveDirections ? Constants.verboseRouteParameter : "")
@@ -75,9 +77,9 @@ public final class Route {
                 let lon = stop["lon"],
                 let latDouble = Double(lat),
                 let lonDouble = Double(lon) {
-                let completeStop = (agency != nil) ? Stop(agency: agency!, stopTag: tag, title: title, shortTitle: stop["shortTitle"], location: (latDouble, lonDouble), stopId: stopId) : Stop(agencyTag: agencyTag, stopTag: tag, title: title, shortTitle: stop["shortTitle"], location: (latDouble, lonDouble), stopId: stopId)
+                let completeStop = (agency != nil) ? Stop(agency: agency!, stopTag: tag, title: title, shortTitle: stop["shortTitle"], location: Location(latitude: latDouble, longitude: lonDouble), stopId: stopId) : Stop(agencyTag: agencyTag, stopTag: tag, title: title, shortTitle: stop["shortTitle"], location: Location(latitude: latDouble, longitude: lonDouble), stopId: stopId)
                 stops[tag] = completeStop
-                agency?.stopCache[tag] = completeStop
+                //agency?.stopCache[tag] = completeStop
             } else {
                 throw Error.parseError
             }
@@ -90,14 +92,14 @@ public final class Route {
                 let title = direction["title"],
                 let active = direction["useForUI"] {
 
-                let orderedStops: [Stop] = direction.css("stop").flatMap({ $0["tag"] }).flatMap({ stops[$0] })
+                let orderedStops: [Stop] = direction.css("stop").compactMap({ $0["tag"] }).compactMap({ stops[$0] })
                 let completeDirection = Direction(name: name,
                                                   tag: tag,
                                                   title: title,
                                                   active: active == "true",
                                                   orderedStops: orderedStops)
                 directions.append(completeDirection)
-                agency?.directionCache[tag] = completeDirection
+                //agency?.directionCache[tag] = completeDirection
             } else {
                 throw Error.parseError
             }
@@ -155,6 +157,13 @@ public final class Route {
     // MARK: - Private variables
     fileprivate let agencyTag: String
     fileprivate weak var agency: Agency?
+    
+    // MARK: - Other
+    /// A symbol that can be assigned
+    public var cachedSymbol: UIImage? = nil
+    
+    // MARK: - CodingKeys
+    private enum CodingKeys: String, CodingKey { case agency, agencyTag, tag, title, shortTitle }
 }
 
 /// A representation of route details that require an additional API call
@@ -187,4 +196,17 @@ public struct RouteArea {
     
     /// The maximum longitude of the bounding box
     public let lonMax: Double
+}
+
+/// Hashable/Equatable protocol conformance
+extension Route: Hashable, Equatable {
+    static public func ==(lhs: Route, rhs: Route) -> Bool {
+        return lhs.tag == rhs.tag && lhs.title == rhs.title && lhs.shortTitle == rhs.shortTitle
+    }
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(tag)
+        hasher.combine(title)
+        hasher.combine(shortTitle)
+    }
 }

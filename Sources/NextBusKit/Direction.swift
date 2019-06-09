@@ -11,7 +11,7 @@
 ///
 /// - Todo: It's unfortunate that the Prediction API call doesn't return better route details. We
 ///   should be able to cache known directions so they can be reused in the prediction API call.
-public struct Direction {
+public struct Direction: Codable {
     
     /// The canonical direction used by the agency. E.g. "Inbound" or "Outbound"
     public let name: String?
