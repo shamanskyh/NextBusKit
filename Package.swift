@@ -13,7 +13,7 @@ let package = Package(
             targets: ["NextBusKit"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/shamanskyh/Kanna.git", .branch("better-linking"))
+        .package(url: "https://github.com/shamanskyh/Kanna.git", from: "5.0.1")
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
